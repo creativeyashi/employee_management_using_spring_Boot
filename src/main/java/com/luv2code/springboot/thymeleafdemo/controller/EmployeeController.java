@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.validation.Valid;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -20,26 +21,32 @@ import com.luv2code.springboot.thymeleafdemo.service.EmployeeService;
 @RequestMapping("/employees")
 public class EmployeeController {
 
+
+	@Autowired
 	private EmployeeService employeeService;
-	
-	public EmployeeController(EmployeeService theEmployeeService) {
-		employeeService = theEmployeeService;
+	public EmployeeController() {
+      //controller
 	}
-	
-	// add mapping for "/list"
+
+	private static final String PATH_FOR_LIST="employees/list-employees";
+	private static final String REDIRECT="redirect:";
+	private static final String EMPFORM="employees/employee-form";
+	private static final String LIST="/employees/list";
+
+
 
 	@GetMapping("/list")
 	public String listEmployees(Model theModel) {
-		
+
 		// get employees from db
 		List<Employee> theEmployees = employeeService.findAll();
-		
+
 		// add to the spring model
 		theModel.addAttribute("employees", theEmployees);
-		
-		return "employees/list-employees";
+
+		return PATH_FOR_LIST;
 	}
-	
+
 	@GetMapping("/showFormForAdd")
 	public String showFormForAdd(Model theModel) {
 		
@@ -48,7 +55,7 @@ public class EmployeeController {
 		
 		theModel.addAttribute("employee", theEmployee);
 		
-		return "employees/employee-form";
+		return EMPFORM;
 	}
 
 	@GetMapping("/showFormForUpdate")
@@ -62,28 +69,24 @@ public class EmployeeController {
 		theModel.addAttribute("employee", theEmployee);
 		
 		// send over to our form
-		return "employees/employee-form";			
+		return EMPFORM;
 	}
-	
-	
+
 	@PostMapping("/save")
-	public String saveEmployee(
-			@ModelAttribute("employee") @Valid Employee theEmployee,
-			BindingResult bindingResult) {
-		
-		if (bindingResult.hasErrors()) {
-			return "employees/employee-form";
+	public String saveEmployee(@Valid @ModelAttribute("employee") Employee theEmployee, BindingResult bindingResult) {
+
+		if(bindingResult.hasErrors()){
+
+			return EMPFORM;
 		}
-		else {		
-			// save the employee
+		else {
+
 			employeeService.save(theEmployee);
-			
-			// use a redirect to prevent duplicate submissions
-			return "redirect:/employees/list";
+			return REDIRECT+LIST;
 		}
+
 	}
-	
-	
+
 	@GetMapping("/delete")
 	public String delete(@RequestParam("employeeId") int theId) {
 		
@@ -91,7 +94,7 @@ public class EmployeeController {
 		employeeService.deleteById(theId);
 		
 		// redirect to /employees/list
-		return "redirect:/employees/list";
+		return REDIRECT+LIST;
 		
 	}
 	
@@ -104,7 +107,7 @@ public class EmployeeController {
 		// check names, if both are empty then just give list of all employees
 
 		if (theFirstName.trim().isEmpty() && theLastName.trim().isEmpty()) {
-			return "redirect:/employees/list";
+			return REDIRECT+LIST;
 		}
 		else {
 			// else, search by first name and last name
@@ -115,10 +118,11 @@ public class EmployeeController {
 			theModel.addAttribute("employees", theEmployees);
 			
 			// send to list-employees
-			return "employees/list-employees";
+			return PATH_FOR_LIST;
 		}
 		
 	}
+
 }
 
 
